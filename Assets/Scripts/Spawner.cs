@@ -48,13 +48,13 @@ public class Spawner : MonoBehaviour
     private Cube CreateInstantiate()
     {
         Cube cube = Instantiate(_cubePrefab);
-        cube.Enabled += Release;
+        cube.ReturnToPool += Release;
         return cube;
     }
 
     private void Enable(Cube cube)
     {
-        cube.transform.position = GetRandomSpawn();
+        cube.transform.position = GetRandomPosition();
         cube.SetDefault();
         cube.gameObject.SetActive(true);
         _activeCubeCount++;
@@ -74,9 +74,10 @@ public class Spawner : MonoBehaviour
     private void Destroy(Cube cube)
     {
         Destroy(cube.gameObject);
+        cube.ReturnToPool -= Release;
     }
 
-    private Vector3 GetRandomSpawn()
+    private Vector3 GetRandomPosition()
     {
         Vector3 randomSphere = Random.insideUnitSphere * _sphereRadius;
         return transform.position + new Vector3(randomSphere.x, 0, randomSphere.z);

@@ -3,43 +3,41 @@ using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(Renderer), typeof(Rigidbody))]
-
 public class Cube : MonoBehaviour
 {
-    private Renderer _renderer;
     private Rigidbody _rigidbody;
     private Coroutine _enabledCoroutine;
+    private ColorChanger _colorChanger = new()                                                                                                      ;
 
-    private bool _isReached;
+    private bool _isTouched;
     private float _minDelay = 2f;
     private float _maxDelay = 5f;
 
-    public event Action<Cube> Enabled;
+    public Renderer Renderer { get; private set; }
+    public event Action<Cube> ReturnToPool;
 
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
-        _renderer = GetComponent<Renderer>();
+        Renderer = GetComponent<Renderer>();
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (_isReached || collision.collider.TryGetComponent<Platform>(out _) == false)
-        {
+        if (_isTouched || collision.collider.TryGetComponent<Platform>(out _) == false)
             return;
-        }
 
-        _isReached = true;
+        _isTouched = true;
 
-        ColorChanger.SetRandomColor(_renderer);
+        _colorChanger.SetRandomColor(Renderer);
         _enabledCoroutine = StartCoroutine(DestroyWithDelay());
     }
 
     public void SetDefault()
     {
-        _isReached = false;
-        ColorChanger.SetDefaultColor(_renderer);
-        
+        _isTouched = false;
+        _colorChanger.SetDefaultColor(Renderer);
+
         if (_enabledCoroutine != null)
         {
             StopCoroutine(_enabledCoroutine);
@@ -54,8 +52,6 @@ public class Cube : MonoBehaviour
         yield return new WaitForSeconds(currentDelay);
 
         if (gameObject.activeInHierarchy)
-        {
-            Enabled?.Invoke(this);
-        }
+            ReturnToPool?.Invoke(this);
     }
 }
